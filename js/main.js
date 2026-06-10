@@ -1,5 +1,6 @@
 // ============================================================
 // ZARA BUSINESS LAW — Premium Interactive JS
+// Counter animations, FAQ, mobile nav, sticky header
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -78,82 +79,17 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // ==================== SCROLL ANIMATIONS ====================
-    var animSelectors = [
-        ".card",
-        ".blog-card",
-        ".service-card",
-        ".result-card",
-        ".faq-item",
-        ".sidebar-card",
-        ".section-header",
-        ".cta-inner",
-        ".contact-info-card"
-    ];
-
-    var fadeEls = [];
-    animSelectors.forEach(function(sel) {
-        document.querySelectorAll(sel).forEach(function(el) {
-            el.classList.add("fade-up");
-            fadeEls.push(el);
-        });
-    });
-
-    function checkFadeUps() {
-        var wh = window.innerHeight;
-        for (var i = fadeEls.length - 1; i >= 0; i--) {
-            var el = fadeEls[i];
-            var rect = el.getBoundingClientRect();
-            if (rect.top < wh - 30 || rect.bottom < 0) {
-                // Stagger siblings
-                var parent = el.parentElement;
-                var siblings = parent ? Array.from(parent.children).filter(function(c) {
-                    return c.classList.contains("fade-up") && !c.classList.contains("visible");
-                }) : [];
-                var idx = siblings.indexOf(el);
-                var delay = (idx > 0) ? idx * 80 : 0;
-                if (delay > 400) delay = 400;
-
-                (function(element, d) {
-                    setTimeout(function() {
-                        element.classList.add("visible");
-                    }, d);
-                })(el, delay);
-
-                fadeEls.splice(i, 1);
-            }
-        }
-        if (fadeEls.length === 0) {
-            window.removeEventListener("scroll", onScroll);
-        }
-    }
-
-    function onScroll() {
-        requestAnimationFrame(checkFadeUps);
-    }
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    // Initial check for above-fold elements
-    // Also run a periodic check as fallback for programmatic scrolling
-    var fallbackTimer = setInterval(function() {
-        checkFadeUps();
-        checkCounters();
-        if (fadeEls.length === 0) clearInterval(fallbackTimer);
-    }, 200);
-    checkFadeUps();
-
     // ==================== COUNTER ANIMATION ====================
     var statNumbers = document.querySelectorAll(".stat-number");
-    var statAnimated = [];
-    statNumbers.forEach(function(el) { statAnimated.push(false); });
+    var animated = new Set();
 
     function checkCounters() {
         var wh = window.innerHeight;
         statNumbers.forEach(function(el, i) {
-            if (statAnimated[i]) return;
+            if (animated.has(i)) return;
             var rect = el.getBoundingClientRect();
-            if (rect.top < wh - 50 && rect.bottom > 0) {
-                statAnimated[i] = true;
+            if (rect.top < wh && rect.bottom > 0) {
+                animated.add(i);
                 animateCounter(el);
             }
         });
@@ -163,7 +99,6 @@ document.addEventListener("DOMContentLoaded", function() {
         var text = el.textContent.trim();
         var match = text.match(/^([\d,]+)(\+?)$/);
         if (!match) return;
-
         var num = parseInt(match[1].replace(/,/g, ""), 10);
         var suffix = match[2] || "";
         if (isNaN(num) || num === 0) return;
@@ -191,9 +126,11 @@ document.addEventListener("DOMContentLoaded", function() {
         requestAnimationFrame(step);
     }
 
+    // Check counters on scroll and periodically
     window.addEventListener("scroll", function() {
         requestAnimationFrame(checkCounters);
     }, { passive: true });
+    setInterval(checkCounters, 300);
     checkCounters();
 
     // ==================== HERO PARALLAX ====================
