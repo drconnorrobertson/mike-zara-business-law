@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function() {
         for (var i = fadeEls.length - 1; i >= 0; i--) {
             var el = fadeEls[i];
             var rect = el.getBoundingClientRect();
-            if (rect.top < wh - 30) {
+            if (rect.top < wh - 30 || rect.bottom < 0) {
                 // Stagger siblings
                 var parent = el.parentElement;
                 var siblings = parent ? Array.from(parent.children).filter(function(c) {
