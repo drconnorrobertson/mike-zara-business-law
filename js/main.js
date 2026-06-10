@@ -80,9 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==================== SCROLL ANIMATIONS ====================
-    // Only animate specific card-level and section-level elements.
-    // Do NOT animate individual paragraphs/headings inside content areas
-    // to avoid creating huge empty gaps.
+    // Animate card-level elements only. NOT hero, NOT inline content.
     var animSelectors = [
         ".card",
         ".blog-card",
@@ -92,8 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ".sidebar-card",
         ".section-header",
         ".cta-inner",
-        ".contact-info-card",
-        ".hero-content"
+        ".contact-info-card"
     ];
 
     var els = [];
@@ -112,7 +109,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (entry.isIntersecting) {
                     var el = entry.target;
                     var parent = el.parentElement;
-                    // Stagger siblings that share a grid parent
                     var siblings = parent ? Array.from(parent.children).filter(function(c) {
                         return c.classList.contains("fade-up");
                     }) : [];
@@ -128,8 +124,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
         }, {
-            threshold: 0.05,
-            rootMargin: "0px 0px -20px 0px"
+            threshold: 0.02,
+            rootMargin: "50px 0px -10px 0px"
         });
 
         els.forEach(function(el) { observer.observe(el); });
@@ -147,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     counterObserver.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.5 });
+        }, { threshold: 0.3 });
 
         statNumbers.forEach(function(el) { counterObserver.observe(el); });
     }
