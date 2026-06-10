@@ -6,8 +6,8 @@
 document.addEventListener("DOMContentLoaded", function() {
 
     // ==================== MOBILE NAV ====================
-    const toggle = document.getElementById("mobileToggle");
-    const nav = document.getElementById("mainNav");
+    var toggle = document.getElementById("mobileToggle");
+    var nav = document.getElementById("mainNav");
     if (toggle && nav) {
         toggle.addEventListener("click", function() {
             toggle.classList.toggle("active");
@@ -24,22 +24,19 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==================== STICKY HEADER ====================
-    const header = document.getElementById("header");
+    var header = document.getElementById("header");
     if (header) {
-        let lastScroll = 0;
         window.addEventListener("scroll", function() {
-            const y = window.scrollY;
-            header.classList.toggle("scrolled", y > 60);
-            lastScroll = y;
+            header.classList.toggle("scrolled", window.scrollY > 60);
         }, { passive: true });
     }
 
     // ==================== FAQ ACCORDION ====================
     document.querySelectorAll(".faq-q").forEach(function(btn) {
         btn.addEventListener("click", function() {
-            const item = this.closest(".faq-item");
-            const wasActive = item.classList.contains("active");
-            const list = item.closest(".faq-list");
+            var item = this.closest(".faq-item");
+            var wasActive = item.classList.contains("active");
+            var list = item.closest(".faq-list");
             if (list) {
                 list.querySelectorAll(".faq-item").forEach(function(i) {
                     i.classList.remove("active");
@@ -52,9 +49,9 @@ document.addEventListener("DOMContentLoaded", function() {
     // ==================== SMOOTH SCROLL ====================
     document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
         anchor.addEventListener("click", function(e) {
-            const id = this.getAttribute("href");
+            var id = this.getAttribute("href");
             if (id.length > 1) {
-                const target = document.querySelector(id);
+                var target = document.querySelector(id);
                 if (target) {
                     e.preventDefault();
                     target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -64,12 +61,12 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // ==================== CONTACT FORM ====================
-    const form = document.getElementById("contactForm");
+    var form = document.getElementById("contactForm");
     if (form) {
         form.addEventListener("submit", function(e) {
             e.preventDefault();
-            const btn = form.querySelector("button[type=submit]");
-            const origText = btn.textContent;
+            var btn = form.querySelector("button[type=submit]");
+            var origText = btn.textContent;
             btn.textContent = "Message Sent!";
             btn.style.background = "linear-gradient(135deg, var(--charcoal), var(--navy))";
             btn.style.color = "var(--gold)";
@@ -83,17 +80,24 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==================== SCROLL ANIMATIONS ====================
-    // Tag elements for animation
-    var animTargets = [
-        ".card", ".blog-card", ".service-card", ".stat-item",
-        ".result-card", ".state-item", ".faq-item", ".sidebar-card",
-        ".section-header", ".content-main > *", ".guide-content > *",
-        ".blog-article > *", ".contact-grid > div", ".contact-detail",
-        ".cta-inner", ".glossary-term", ".hero-content"
+    // Only animate specific card-level and section-level elements.
+    // Do NOT animate individual paragraphs/headings inside content areas
+    // to avoid creating huge empty gaps.
+    var animSelectors = [
+        ".card",
+        ".blog-card",
+        ".service-card",
+        ".result-card",
+        ".faq-item",
+        ".sidebar-card",
+        ".section-header",
+        ".cta-inner",
+        ".contact-info-card",
+        ".hero-content"
     ];
 
     var els = [];
-    animTargets.forEach(function(sel) {
+    animSelectors.forEach(function(sel) {
         document.querySelectorAll(sel).forEach(function(el) {
             if (!el.classList.contains("fade-up")) {
                 el.classList.add("fade-up");
@@ -106,15 +110,15 @@ document.addEventListener("DOMContentLoaded", function() {
         var observer = new IntersectionObserver(function(entries) {
             entries.forEach(function(entry) {
                 if (entry.isIntersecting) {
-                    // Stagger cards within grids
                     var el = entry.target;
                     var parent = el.parentElement;
+                    // Stagger siblings that share a grid parent
                     var siblings = parent ? Array.from(parent.children).filter(function(c) {
                         return c.classList.contains("fade-up");
                     }) : [];
                     var idx = siblings.indexOf(el);
-                    var delay = idx >= 0 ? idx * 80 : 0;
-                    if (delay > 400) delay = 400; // cap
+                    var delay = (idx >= 0 && siblings.length > 1) ? idx * 100 : 0;
+                    if (delay > 500) delay = 500;
 
                     setTimeout(function() {
                         el.classList.add("visible");
@@ -124,13 +128,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
         }, {
-            threshold: 0.08,
-            rootMargin: "0px 0px -40px 0px"
+            threshold: 0.05,
+            rootMargin: "0px 0px -20px 0px"
         });
 
         els.forEach(function(el) { observer.observe(el); });
     } else {
-        // Fallback: show everything immediately
         els.forEach(function(el) { el.classList.add("visible"); });
     }
 
@@ -151,15 +154,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function animateCounter(el) {
         var text = el.textContent.trim();
-        var suffix = "";
-        var num = 0;
-
-        // Parse "20+", "500+", "4", "50", etc.
         var match = text.match(/^([\d,]+)(\+?)$/);
         if (!match) return;
 
-        num = parseInt(match[1].replace(/,/g, ""), 10);
-        suffix = match[2] || "";
+        var num = parseInt(match[1].replace(/,/g, ""), 10);
+        var suffix = match[2] || "";
         if (isNaN(num) || num === 0) return;
 
         var duration = 1800;
@@ -172,8 +171,7 @@ document.addEventListener("DOMContentLoaded", function() {
         function step(timestamp) {
             if (!startTime) startTime = timestamp;
             var progress = Math.min((timestamp - startTime) / duration, 1);
-            var easedProgress = easeOutExpo(progress);
-            var current = Math.floor(easedProgress * num);
+            var current = Math.floor(easeOutExpo(progress) * num);
             el.textContent = current.toLocaleString() + suffix;
             if (progress < 1) {
                 requestAnimationFrame(step);
