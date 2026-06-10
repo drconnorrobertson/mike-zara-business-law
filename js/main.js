@@ -134,6 +134,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     // Initial check for above-fold elements
+    // Also run a periodic check as fallback for programmatic scrolling
+    var fallbackTimer = setInterval(function() {
+        checkFadeUps();
+        checkCounters();
+        if (fadeEls.length === 0) clearInterval(fallbackTimer);
+    }, 200);
     checkFadeUps();
 
     // ==================== COUNTER ANIMATION ====================
