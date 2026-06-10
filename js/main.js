@@ -1,6 +1,5 @@
 // ============================================================
 // ZARA BUSINESS LAW — Premium Interactive JS
-// Scroll animations, counter animations, glassmorphism header
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -80,7 +79,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==================== SCROLL ANIMATIONS ====================
-    // Animate card-level elements only. NOT hero, NOT inline content.
     var animSelectors = [
         ".card",
         ".blog-card",
@@ -93,59 +91,66 @@ document.addEventListener("DOMContentLoaded", function() {
         ".contact-info-card"
     ];
 
-    var els = [];
+    var fadeEls = [];
     animSelectors.forEach(function(sel) {
         document.querySelectorAll(sel).forEach(function(el) {
-            if (!el.classList.contains("fade-up")) {
-                el.classList.add("fade-up");
-                els.push(el);
-            }
+            el.classList.add("fade-up");
+            fadeEls.push(el);
         });
     });
 
-    if ("IntersectionObserver" in window && els.length > 0) {
-        var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-                if (entry.isIntersecting) {
-                    var el = entry.target;
-                    var parent = el.parentElement;
-                    var siblings = parent ? Array.from(parent.children).filter(function(c) {
-                        return c.classList.contains("fade-up");
-                    }) : [];
-                    var idx = siblings.indexOf(el);
-                    var delay = (idx >= 0 && siblings.length > 1) ? idx * 100 : 0;
-                    if (delay > 500) delay = 500;
+    function checkFadeUps() {
+        var wh = window.innerHeight;
+        for (var i = fadeEls.length - 1; i >= 0; i--) {
+            var el = fadeEls[i];
+            var rect = el.getBoundingClientRect();
+            if (rect.top < wh - 30) {
+                // Stagger siblings
+                var parent = el.parentElement;
+                var siblings = parent ? Array.from(parent.children).filter(function(c) {
+                    return c.classList.contains("fade-up") && !c.classList.contains("visible");
+                }) : [];
+                var idx = siblings.indexOf(el);
+                var delay = (idx > 0) ? idx * 80 : 0;
+                if (delay > 400) delay = 400;
 
+                (function(element, d) {
                     setTimeout(function() {
-                        el.classList.add("visible");
-                    }, delay);
+                        element.classList.add("visible");
+                    }, d);
+                })(el, delay);
 
-                    observer.unobserve(el);
-                }
-            });
-        }, {
-            threshold: 0.02,
-            rootMargin: "50px 0px -10px 0px"
-        });
-
-        els.forEach(function(el) { observer.observe(el); });
-    } else {
-        els.forEach(function(el) { el.classList.add("visible"); });
+                fadeEls.splice(i, 1);
+            }
+        }
+        if (fadeEls.length === 0) {
+            window.removeEventListener("scroll", onScroll);
+        }
     }
+
+    function onScroll() {
+        requestAnimationFrame(checkFadeUps);
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // Initial check for above-fold elements
+    checkFadeUps();
 
     // ==================== COUNTER ANIMATION ====================
     var statNumbers = document.querySelectorAll(".stat-number");
-    if (statNumbers.length > 0 && "IntersectionObserver" in window) {
-        var counterObserver = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-                if (entry.isIntersecting) {
-                    animateCounter(entry.target);
-                    counterObserver.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.3 });
+    var statAnimated = [];
+    statNumbers.forEach(function(el) { statAnimated.push(false); });
 
-        statNumbers.forEach(function(el) { counterObserver.observe(el); });
+    function checkCounters() {
+        var wh = window.innerHeight;
+        statNumbers.forEach(function(el, i) {
+            if (statAnimated[i]) return;
+            var rect = el.getBoundingClientRect();
+            if (rect.top < wh - 50 && rect.bottom > 0) {
+                statAnimated[i] = true;
+                animateCounter(el);
+            }
+        });
     }
 
     function animateCounter(el) {
@@ -179,6 +184,11 @@ document.addEventListener("DOMContentLoaded", function() {
         el.textContent = "0" + suffix;
         requestAnimationFrame(step);
     }
+
+    window.addEventListener("scroll", function() {
+        requestAnimationFrame(checkCounters);
+    }, { passive: true });
+    checkCounters();
 
     // ==================== HERO PARALLAX ====================
     var hero = document.querySelector(".hero");
