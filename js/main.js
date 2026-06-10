@@ -14,12 +14,34 @@ document.addEventListener("DOMContentLoaded", function() {
             nav.classList.toggle("active");
             document.body.style.overflow = nav.classList.contains("active") ? "hidden" : "";
         });
+
+        // Close nav when clicking actual navigation links (not dropdown parents)
         nav.querySelectorAll("a").forEach(function(link) {
-            link.addEventListener("click", function() {
+            link.addEventListener("click", function(e) {
+                var href = link.getAttribute("href");
+                // If this is a dropdown parent (href="#"), toggle dropdown instead
+                var parentLi = link.closest(".has-dropdown");
+                if (parentLi && link === parentLi.querySelector(":scope > a")) {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        parentLi.classList.toggle("mobile-open");
+                        return;
+                    }
+                }
+                // For real links, close the nav
                 toggle.classList.remove("active");
                 nav.classList.remove("active");
                 document.body.style.overflow = "";
             });
+        });
+
+        // Close when clicking outside
+        document.addEventListener("click", function(e) {
+            if (nav.classList.contains("active") && !nav.contains(e.target) && !toggle.contains(e.target)) {
+                toggle.classList.remove("active");
+                nav.classList.remove("active");
+                document.body.style.overflow = "";
+            }
         });
     }
 
